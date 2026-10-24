@@ -10,7 +10,7 @@ export const MENUS: { label: string; items: (string | '-')[] }[] = [
     label: 'File',
     items: ['file.new', 'file.open', '-', 'file.save', 'file.saveAs', 'file.backup', 'file.backups', '-', 'file.import', 'file.titlePage', '-', 'file.exportPdf', 'file.exportActorPdf', 'file.exportFdx', 'file.exportFountain', 'file.exportDocx', 'file.exportTxt', 'file.exportHtml', '-', 'file.print', 'file.close'],
   },
-  { label: 'Edit', items: ['edit.undo', 'edit.redo', '-', 'edit.find', '-', 'edit.bold', 'edit.italic', 'edit.underline', '-', 'edit.note', 'edit.bookmark', 'edit.spellAdd'] },
+  { label: 'Edit', items: ['edit.undo', 'edit.redo', '-', 'edit.find', '-', 'edit.bold', 'edit.italic', 'edit.underline', '-', 'edit.note', 'edit.highlight', 'edit.bookmark', 'edit.spellAdd'] },
   {
     label: 'View',
     items: ['view.page', 'view.draft', 'view.speed', '-', 'view.focus', 'view.typewriter', 'view.dark', '-', 'view.zoomIn', 'view.zoomOut', 'view.zoomReset', '-', 'view.roman', 'view.meaning', '-', 'view.sidebar', 'view.rightpanel', '-', 'view.main.script', 'view.main.cards', 'view.main.beats', 'view.main.outline', 'view.main.tracks'],
@@ -21,7 +21,7 @@ export const MENUS: { label: string; items: (string | '-')[] }[] = [
   },
   {
     label: 'Script',
-    items: ['script.phonetic.off', 'script.phonetic.ta', 'script.phonetic.te', 'script.phonetic.hi', 'script.phonetic.ml', 'script.phonetic.kn', '-', 'script.toTamil', 'script.toTelugu', 'script.toHindi', 'script.toMalayalam', 'script.toKannada', 'script.toRoman', '-', 'script.sceneNumbers', 'script.lockScenes', 'script.unlockScenes', 'script.omit', '-', 'script.revisions', 'script.snapshot', 'script.versions', '-', 'script.characters', 'script.locations', 'script.notes', 'script.settings'],
+    items: ['script.phonetic.off', 'script.phonetic.ta', 'script.phonetic.te', 'script.phonetic.hi', 'script.phonetic.ml', 'script.phonetic.kn', '-', 'script.toTamil', 'script.toTelugu', 'script.toHindi', 'script.toMalayalam', 'script.toKannada', 'script.toRoman', '-', 'script.lang.auto', 'script.lang.en', 'script.lang.ta', 'script.lang.te', 'script.lang.hi', 'script.lang.ml', 'script.lang.kn', '-', 'script.sceneNumbers', 'script.lockScenes', 'script.unlockScenes', 'script.omit', '-', 'script.revisions', 'script.snapshot', 'script.versions', '-', 'script.characters', 'script.locations', 'script.notes', 'script.settings'],
   },
   { label: 'Production', items: ['prod.tag', 'prod.sheets', '-', 'prod.oneliner', 'prod.reports', 'prod.songs', 'prod.fights', '-', 'prod.pulse', 'prod.punches', 'prod.stripboard'] },
   { label: 'Tools', items: ['tools.ai', 'tools.writing', 'tools.readAloud', '-', 'view.main.pulse', 'view.main.punches', '-', 'tools.shortcuts', 'tools.settings'] },

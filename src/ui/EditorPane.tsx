@@ -6,6 +6,7 @@ import { getTemplate, Template } from '../core/templates';
 import { fontStack } from '../core/print';
 import { useStore } from './hooks';
 import { schedulePageFill } from '../editor/decorations';
+import { BREAKDOWN_CATEGORIES } from '../core/types';
 
 export function templateCSS(t: Template, indicStyle: 'sans' | 'serif'): string {
   const rules: string[] = [];
@@ -29,6 +30,7 @@ export function templateCSS(t: Template, indicStyle: 'sans' | 'serif'): string {
   rules.push(`.ProseMirror .el.dual-left.el-character{margin-left:2.4in}`);
   rules.push(`.ProseMirror .el.dual-right.el-dialogue,.ProseMirror .el.dual-right.el-parenthetical{margin-left:4.6in;width:2.9in}`);
   rules.push(`.ProseMirror .el.dual-right.el-character{margin-left:5.4in;width:2.1in}`);
+  for (const c of BREAKDOWN_CATEGORIES) rules.push(`.ProseMirror .bd-${c.id}{background:${c.color}2e;border-bottom:2px solid ${c.color}}`);
   return rules.join('\n');
 }
 
@@ -95,7 +97,6 @@ export function EditorPane() {
     const v = store.view;
     if (!v) return;
     v.dom.classList.toggle('focus', prefs.focusMode);
-    v.dom.classList.toggle('mode-' + prefs.mode, true);
   });
 
   return (

@@ -159,6 +159,12 @@ reg({ id: 'edit.italic', label: 'Italic', keys: 'Mod-i', run: () => exec(toggleM
 reg({ id: 'edit.underline', label: 'Underline', keys: 'Mod-u', run: () => exec(toggleMark(schema.marks.underline)) });
 reg({ id: 'edit.note', label: 'Add Script Note', keys: 'Mod-Alt-n', run: () => store.openDialog('note') });
 reg({ id: 'edit.bookmark', label: 'Toggle Bookmark', keys: 'Mod-Alt-b', run: () => toggleBookmark() });
+reg({
+  id: 'edit.highlight',
+  label: 'Highlight',
+  keys: 'Mod-Alt-h',
+  run: () => exec(toggleMark(schema.marks.highlight, { color: '#fff59d' })),
+});
 reg({ id: 'edit.spellAdd', label: 'Custom Dictionary…', run: () => store.openDialog('dictionary') });
 
 // ------------------------------------------------------------------ View
@@ -294,6 +300,21 @@ reg({
     store.emit();
   },
 });
+for (const [l, name] of [['auto', 'Auto-detect'], ['en', 'English'], ['ta', 'Tamil'], ['te', 'Telugu'], ['hi', 'Hindi'], ['ml', 'Malayalam'], ['kn', 'Kannada']] as const)
+  reg({
+    id: 'script.lang.' + l,
+    label: 'Element Language: ' + name,
+    run: () => {
+      const v = view();
+      const cur = currentElement(v.state);
+      if (cur) v.dispatch(v.state.tr.setNodeMarkup(cur.pos, undefined, { ...cur.node.attrs, lang: l === 'auto' ? null : l }));
+    },
+    checked: () => {
+      const st = store.view?.state;
+      const cur = st && currentElement(st);
+      return !!cur && (cur.node.attrs.lang || 'auto') === l;
+    },
+  });
 reg({ id: 'script.characters', label: t('Characters'), run: () => ((prefs.sidebar = 'characters'), store.savePrefs()) });
 reg({ id: 'script.locations', label: t('Locations'), run: () => ((prefs.sidebar = 'locations'), store.savePrefs()) });
 reg({ id: 'script.notes', label: t('Notes'), run: () => ((prefs.sidebar = 'notes'), store.savePrefs()) });
