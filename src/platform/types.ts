@@ -71,7 +71,8 @@ export interface Platform {
   readPath?(path: string): Promise<OpenedFile | null>;
   /** files passed on the command line / double-clicked */
   pendingOpen?(): Promise<OpenedFile | null>;
-  onMenu?(cb: (cmd: string) => void): void;
+  onMenu?(cb: (cmd: string, data?: any) => void): void;
+  setMenu?(menus: unknown): void;
   setTitle(t: string): void;
   setDirty?(dirty: boolean): void;
   getSecret(key: string): Promise<string | null>;

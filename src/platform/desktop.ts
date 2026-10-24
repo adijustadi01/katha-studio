@@ -22,7 +22,8 @@ export interface KathaBridge {
   addRecent(e: unknown): Promise<void>;
   removeRecent(e: unknown): Promise<void>;
   pendingOpen(): Promise<{ name: string; path: string; data: Uint8Array } | null>;
-  onMenu(cb: (cmd: string) => void): void;
+  onMenu(cb: (cmd: string, data?: any) => void): void;
+  setMenu(menus: unknown): void;
   setTitle(t: string): void;
   setDirty(d: boolean): void;
   getSecret(k: string): Promise<string | null>;
@@ -68,6 +69,7 @@ export function desktopPlatform(b: KathaBridge): Platform {
     removeRecent: (e) => b.removeRecent(e),
     pendingOpen: () => b.pendingOpen(),
     onMenu: (cb) => b.onMenu(cb),
+    setMenu: (m) => b.setMenu(m),
     setTitle: (t) => b.setTitle(t),
     setDirty: (d) => b.setDirty(d),
     getSecret: (k) => b.getSecret(k),

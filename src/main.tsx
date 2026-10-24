@@ -7,6 +7,7 @@ import { globalKeydown, runCommand } from './app/commands';
 import { platform, isDesktop } from './platform';
 import { trackProgress } from './app/writing';
 import './features';
+import { nativeMenus } from './ui/MenuBar';
 
 render(<App />, document.getElementById('app')!);
 
@@ -33,7 +34,20 @@ store.subscribe(() => {
 });
 
 // desktop: native menu + files opened by double click
-if (platform.onMenu) platform.onMenu((cmd) => runCommand(cmd));
+if (platform.onMenu)
+  platform.onMenu((cmd, f) => {
+    if (cmd === '__open__' && f) void store.openData(f.name, f.data, { name: f.name, path: f.path });
+    else void runCommand(cmd);
+  });
+if (platform.setMenu) {
+  const send = () => platform.setMenu!(nativeMenus());
+  send();
+  let t: any = null;
+  store.subscribe(() => {
+    clearTimeout(t);
+    t = setTimeout(send, 400);
+  });
+}
 if (platform.pendingOpen) {
   platform.pendingOpen().then((f) => {
     if (f) store.openData(f.name, f.data, { name: f.name, path: f.path });

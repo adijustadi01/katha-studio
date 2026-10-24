@@ -3,6 +3,7 @@ import { command, runCommand } from '../app/commands';
 import { store } from '../app/store';
 import { t } from '../i18n';
 import { useStore } from './hooks';
+import { prefs } from '../app/prefs';
 
 /** Menu structure shared by the in-app menu bar and the Electron native menu. */
 export const MENUS: { label: string; items: (string | '-')[] }[] = [
@@ -80,4 +81,19 @@ export function MenuBar() {
       ))}
     </div>
   );
+}
+
+/** Menu template for the Electron native menu bar. */
+export function nativeMenus() {
+  return MENUS.map((m) => {
+    const items: unknown[] = m.items.map((id) => {
+      if (id === '-') return '-';
+      const c = command(id);
+      if (!c) return '-';
+      return { id, label: c.label, keys: prefs.shortcuts[id] || c.keys, checked: c.checked ? c.checked() : undefined, enabled: !(c.needsProject && !store.project) };
+    });
+    if (m.label === 'Edit') items.splice(3, 0, '-', { role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'selectAll' });
+    if (m.label === 'View') items.push('-', { role: 'togglefullscreen' });
+    return { label: t(m.label), items };
+  });
 }

@@ -1,0 +1,42 @@
+name: Release Windows installer
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Unit tests
+        run: npm test
+      - name: Check tag matches package.json version
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          PKG=$(node -p "require('./package.json').version")
+          TAG=${GITHUB_REF_NAME#v}
+          if [ "$PKG" != "$TAG" ]; then echo "package.json version $PKG does not match tag $TAG"; exit 1; fi
+      - name: Build renderer for desktop
+        run: node scripts/build-desktop.mjs
+      - name: Build NSIS installer and publish to GitHub Releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --win nsis --x64 --publish always
+      - name: Keep installer as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Katha-Studio-Windows
+          path: |
+            release/*.exe
+            release/latest.yml

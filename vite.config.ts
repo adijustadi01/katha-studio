@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import preact from '@preact/preset-vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 // GitHub Pages serves the app from /katha-studio/; Electron loads it from disk (relative paths)
@@ -43,6 +44,7 @@ export default defineConfig({
         },
       }),
   ].filter(Boolean),
+  resolve: target === 'desktop' ? { alias: { 'virtual:pwa-register': fileURLToPath(new URL('./src/pwa-stub.ts', import.meta.url)) } } : {},
   build: {
     outDir: target === 'desktop' ? 'dist-desktop' : 'dist',
     sourcemap: false,
