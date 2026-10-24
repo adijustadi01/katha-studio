@@ -55,7 +55,7 @@ The model can be changed in Settings → AI (default `claude-opus-5-5`).
 ## Release a new version (for maintainers)
 
 1. Change `"version"` in `package.json` (e.g. `1.0.1`) and commit it to `main`.
-2. Create and push a matching tag:
+2. Create and push a matching tag (or, in the **Actions** tab, run **Release Windows installer** on `main` with **Publish** ticked — it creates the tag and release for you):
    ```bash
    git tag v1.0.1
    git push origin v1.0.1

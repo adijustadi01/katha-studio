@@ -4,6 +4,11 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish a GitHub Release for the version in package.json (creates tag v<version>)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -32,7 +37,7 @@ jobs:
       - name: Build NSIS installer and publish to GitHub Releases
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx electron-builder --win nsis --x64 --publish ${{ startsWith(github.ref, 'refs/tags/v') && 'always' || 'never' }}
+        run: npx electron-builder --win nsis --x64 --publish ${{ (startsWith(github.ref, 'refs/tags/v') || inputs.publish) && 'always' || 'never' }}
       - name: Keep installer as a workflow artifact
         uses: actions/upload-artifact@v4
         with:
