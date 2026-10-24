@@ -2,3 +2,4 @@
 // the view/dialog registries when imported.
 import './ui/views/StoryViews';
 import './ui/views/ProductionViews';
+import './ui/dialogs/Revisions';

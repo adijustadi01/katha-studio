@@ -14,6 +14,7 @@ import { lockSceneNumbers, unlockSceneNumbers } from '../core/scenes';
 import type { ElementType } from '../core/types';
 import { docFromElements } from '../editor/schema';
 import { t } from '../i18n';
+import { setElements } from './scriptops';
 
 export interface Command {
   id: string;
@@ -346,9 +347,7 @@ reg({ id: 'help.updates', label: 'Check for Updates', needsProject: false, run: 
 
 // ------------------------------------------------------------------ helpers
 export function applyElements(els: import('../core/types').ScriptElement[]) {
-  const v = view();
-  const doc = docFromElements(els);
-  v.dispatch(v.state.tr.replaceWith(0, v.state.doc.content.size, doc.content));
+  setElements(els, true);
 }
 
 function togglePageBreak() {

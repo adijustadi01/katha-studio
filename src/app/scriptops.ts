@@ -4,12 +4,31 @@ import type { ScriptElement, SceneMeta } from '../core/types';
 import { docFromElements } from '../editor/schema';
 import { scrollToElement } from '../editor';
 
-/** Replace the whole script in one undoable step. */
-export function setElements(els: ScriptElement[]) {
+/**
+ * Replace the script with new elements in one undoable step. Only the range
+ * that actually differs is replaced, so revision marks stay accurate.
+ */
+export function setElements(els: ScriptElement[], noRevision = false) {
   const v = store.view;
   if (!v) return;
-  const doc = docFromElements(els);
-  v.dispatch(v.state.tr.replaceWith(0, v.state.doc.content.size, doc.content));
+  const next = docFromElements(els);
+  const old = v.state.doc;
+  const n = old.childCount;
+  const m = next.childCount;
+  let pre = 0;
+  while (pre < n && pre < m && old.child(pre).eq(next.child(pre))) pre++;
+  let suf = 0;
+  while (suf < n - pre && suf < m - pre && old.child(n - 1 - suf).eq(next.child(m - 1 - suf))) suf++;
+  if (pre === n && pre === m) return;
+  let from = 0;
+  for (let i = 0; i < pre; i++) from += old.child(i).nodeSize;
+  let to = old.content.size;
+  for (let i = 0; i < suf; i++) to -= old.child(n - 1 - i).nodeSize;
+  const nodes = [];
+  for (let i = pre; i < m - suf; i++) nodes.push(next.child(i));
+  const tr = v.state.tr.replaceWith(from, to, nodes);
+  if (noRevision) tr.setMeta('noRevision', true);
+  v.dispatch(tr);
 }
 
 /** Move scene `id` so it sits before scene `beforeId` (or at the end when null). */
