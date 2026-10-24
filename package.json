@@ -114,8 +114,7 @@
       }
     ],
     "releaseInfo": {
-      "releaseName": "Katha Studio ${version}",
-      "releaseNotes": "Katha Studio \u2014 screenwriting for Indian film & OTT.\n\nDownload **Katha-Studio-Setup-${version}.exe** below and double-click it. If Windows shows \"Windows protected your PC\", click **More info \u2192 Run anyway** (the installer is not code-signed yet).\n\nWeb version: https://adijustadi01.github.io/katha-studio/"
+      "releaseNotes": "Katha Studio \u2014 screenwriting for Indian film & OTT.\n\nDownload the **Katha-Studio-Setup-\u2026.exe** file below and double-click it. If Windows shows \"Windows protected your PC\", click **More info \u2192 Run anyway** (the installer is not code-signed yet).\n\nWeb version: https://adijustadi01.github.io/katha-studio/"
     }
   }
 }
