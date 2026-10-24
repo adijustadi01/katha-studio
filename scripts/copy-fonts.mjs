@@ -3,8 +3,9 @@
 // script's unicode-range so Courier Prime always renders Latin text.
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const src = path.join(root, 'node_modules/@fontsource');
 const out = path.join(root, 'public/fonts');
 fs.mkdirSync(out, { recursive: true });
