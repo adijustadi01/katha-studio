@@ -1,0 +1,8 @@
+node_modules/
+dist/
+dist-desktop/
+electron-dist/
+release/
+*.log
+.DS_Store
+public/fonts/

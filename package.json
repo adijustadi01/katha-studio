@@ -1,0 +1,58 @@
+{
+  "name": "katha-studio",
+  "version": "1.0.0",
+  "description": "Katha Studio — professional screenwriting for Indian film and OTT (Tamil, Telugu, Hindi, Malayalam, Kannada)",
+  "main": "electron-dist/main.cjs",
+  "scripts": {
+    "fonts": "node scripts/copy-fonts.mjs",
+    "dev": "npm run fonts && vite",
+    "build": "npm run fonts && vite build",
+    "build:desktop": "npm run fonts && KATHA_TARGET=desktop vite build && node scripts/build-electron.mjs",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "electron": "npm run build:desktop && electron .",
+    "dist:win": "npm run build:desktop && electron-builder --win --publish never"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adijustadi01/katha-studio.git"
+  },
+  "keywords": [],
+  "author": "Katha Studio",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/adijustadi01/katha-studio/issues"
+  },
+  "homepage": "https://github.com/adijustadi01/katha-studio#readme",
+  "dependencies": {
+    "@fontsource/courier-prime": "^5.3.0",
+    "@fontsource/noto-sans-devanagari": "^5.3.0",
+    "@fontsource/noto-sans-kannada": "^5.3.0",
+    "@fontsource/noto-sans-malayalam": "^5.3.0",
+    "@fontsource/noto-sans-tamil": "^5.3.0",
+    "@fontsource/noto-sans-telugu": "^5.3.0",
+    "@fontsource/noto-serif-tamil": "^5.3.0",
+    "@fontsource/noto-serif-telugu": "^5.3.0",
+    "jszip": "^3.10.2",
+    "preact": "^11.0.2",
+    "prosemirror-commands": "^1.7.2",
+    "prosemirror-history": "^1.5.1",
+    "prosemirror-keymap": "^1.2.3",
+    "prosemirror-model": "^1.25.12",
+    "prosemirror-state": "^1.4.4",
+    "prosemirror-transform": "^1.12.4",
+    "prosemirror-view": "^1.42.8"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.10.6",
+    "@types/node": "^26.6.5",
+    "jsdom": "^29.1.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.0.5"
+  },
+  "private": true,
+  "type": "module"
+}
