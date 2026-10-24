@@ -64,9 +64,10 @@ export function phoneticPlugin(): Plugin {
     box.appendChild(hint);
     try {
       const c = view.coordsAtPos(comp.from);
-      box.style.left = c.left + 'px';
-      box.style.top = c.bottom + 4 + 'px';
       box.style.display = 'block';
+      box.style.left = Math.min(c.left, window.innerWidth - box.offsetWidth - 8) + 'px';
+      const below = c.bottom + 4;
+      box.style.top = (below + box.offsetHeight > window.innerHeight - 8 ? Math.max(8, c.top - box.offsetHeight - 4) : below) + 'px';
     } catch {
       box.style.display = 'none';
     }

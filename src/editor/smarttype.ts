@@ -133,9 +133,10 @@ export function smartTypePlugin(): Plugin {
       box!.appendChild(d);
     });
     const coords = view.coordsAtPos(current.from);
-    box.style.display = 'block';
-    box.style.left = coords.left + 'px';
-    box.style.top = coords.bottom + 4 + 'px';
+      box.style.display = 'block';
+      box.style.left = Math.min(coords.left, window.innerWidth - box.offsetWidth - 8) + 'px';
+      const below = coords.bottom + 4;
+      box.style.top = (below + box.offsetHeight > window.innerHeight - 8 ? Math.max(8, coords.top - box.offsetHeight - 4) : below) + 'px';
   };
 
   const accept = (view: EditorView) => {

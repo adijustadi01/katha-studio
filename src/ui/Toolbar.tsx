@@ -10,6 +10,7 @@ import { useSelection, useStore } from './hooks';
 import { t } from '../i18n';
 import { keyLabel } from './MenuBar';
 import { DIGIT_SHORTCUTS } from '../core/elements';
+import { isDesktop } from '../platform';
 
 const LANG_BUTTONS: [IndicLang | null, string, string][] = [
   [null, 'EN', 'English (phonetic typing off)'],
@@ -115,6 +116,11 @@ export function Toolbar() {
       <button class="ghost" title="Save (Ctrl+S)" onClick={() => runCommand('file.save')}>
         💾
       </button>
+      {!isDesktop && (
+        <button class="ghost" title="Download a backup copy of this script (.katha) — do this regularly in the browser" onClick={() => runCommand('file.backup')}>
+          ⬇ Backup
+        </button>
+      )}
       <button class="ghost" title="Export PDF" onClick={() => runCommand('file.exportPdf')}>
         PDF
       </button>

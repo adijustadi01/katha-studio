@@ -273,10 +273,15 @@ export function decorationsPlugin(): Plugin {
         return decoKey.getState(state);
       },
     },
-    view() {
+    view(v) {
+      // fonts loading or window resizes change rendered heights without a doc change
+      const iv = setInterval(() => config?.mode === 'page' && schedulePageFill(v), 1500);
       return {
-        update(view) {
-          if (config?.mode === 'page') schedulePageFill(view);
+        destroy() {
+          clearInterval(iv);
+        },
+        update(view, prev) {
+          if (config?.mode === 'page' && (prev.doc !== view.state.doc || decoKey.getState(prev) !== decoKey.getState(view.state))) schedulePageFill(view);
         },
       };
     },
@@ -284,41 +289,58 @@ export function decorationsPlugin(): Plugin {
 }
 
 let fillQueued = false;
+let fillTimer: any = null;
+let lastFill = 0;
 /**
  * Page View: size each page-break filler from the real rendered content so
- * page sheets line up exactly with the printed page height.
+ * page sheets line up exactly with the printed page height. Reads all
+ * positions first, then writes all heights (two layouts in total), because a
+ * filler's height shifts later pages without changing their content height.
  */
 export function schedulePageFill(view: EditorView) {
   if (fillQueued) return;
   fillQueued = true;
-  requestAnimationFrame(() => {
-    fillQueued = false;
-    if (!config || config.mode !== 'page') return;
-    const t = config.template;
-    const pxPerIn = 96;
-    const contentPx = (config.layout?.contentHeight || (t.pageHeight - t.marginTop - t.marginBottom) * 72) * (pxPerIn / 72);
-    const root = view.dom as HTMLElement;
-    const breaks = root.querySelectorAll<HTMLElement>('.pb-page');
-    // page top = bottom of previous .pb-top (or the editor's content top)
-    const zoom = root.getBoundingClientRect().width / root.offsetWidth || 1;
-    let pageTop = root.getBoundingClientRect().top / zoom + parseFloat(getComputedStyle(root).paddingTop || '0');
-    for (const b of Array.from(breaks)) {
-      const fill = b.querySelector<HTMLElement>('.pb-fill');
-      const more = b.querySelector<HTMLElement>('.pb-more');
-      if (!fill) continue;
-      fill.style.height = '0px';
-      const top = b.getBoundingClientRect().top / zoom;
-      const used = top - pageTop + (more ? more.offsetHeight : 0);
-      const h = Math.max(0, contentPx - used);
-      fill.style.height = h + 'px';
-      const topBox = b.querySelector<HTMLElement>('.pb-top');
-      pageTop = topBox ? topBox.getBoundingClientRect().bottom / zoom : top;
-      // following element's space-before is dropped at the top of a page
-      const next = b.dataset.next;
-      if (next && !b.classList.contains('pb-inline')) {
-        const sb = config.template.elements[next as keyof Template['elements']]?.spaceBefore || 0;
-        b.style.marginBottom = -sb * config.template.lineHeight + 'pt';
-      }
+  // throttle while typing: at most ~4 passes a second
+  const wait = Math.max(0, 250 - (Date.now() - lastFill));
+  clearTimeout(fillTimer);
+  fillTimer = setTimeout(() => requestAnimationFrame(() => runPageFill(view)), wait);
+}
+
+function runPageFill(view: EditorView) {
+  fillQueued = false;
+  lastFill = Date.now();
+  if (!config || config.mode !== 'page') return;
+  const t = config.template;
+  const contentPx = (config.layout?.contentHeight || (t.pageHeight - t.marginTop - t.marginBottom) * 72) * (96 / 72);
+  const root = view.dom as HTMLElement;
+  if (!root.isConnected) return;
+  const breaks = Array.from(root.querySelectorAll<HTMLElement>('.pb-page'));
+  const rootRect = root.getBoundingClientRect();
+  const zoom = rootRect.width / (root.offsetWidth || 1) || 1;
+  // ---- read pass
+  let pageTop = rootRect.top / zoom + parseFloat(getComputedStyle(root).paddingTop || '0');
+  const plan: { fill: HTMLElement; h: number; el: HTMLElement; mb: string | null }[] = [];
+  for (const b of breaks) {
+    const fill = b.querySelector<HTMLElement>('.pb-fill');
+    const topBox = b.querySelector<HTMLElement>('.pb-top');
+    if (!fill || !topBox) continue;
+    const more = b.querySelector<HTMLElement>('.pb-more');
+    const top = b.getBoundingClientRect().top / zoom;
+    const used = top - pageTop + (more ? more.offsetHeight : 0);
+    plan.push({ fill, h: Math.max(0, contentPx - used), el: b, mb: null });
+    // both this break and the next are measured in the same (current) coordinates,
+    // so each page's content height is independent of the fillers above it
+    pageTop = topBox.getBoundingClientRect().bottom / zoom;
+    const next = b.dataset.next;
+    if (next && !b.classList.contains('pb-inline')) {
+      const sb = config.template.elements[next as keyof Template['elements']]?.spaceBefore || 0;
+      plan[plan.length - 1].mb = -sb * config.template.lineHeight + 'pt';
     }
-  });
+  }
+  // ---- write pass
+  for (const p of plan) {
+    const cur = parseFloat(p.fill.style.height || '0') || 0;
+    if (Math.abs(cur - p.h) > 0.5) p.fill.style.height = p.h + 'px';
+    if (p.mb !== null && p.el.style.marginBottom !== p.mb) p.el.style.marginBottom = p.mb;
+  }
 }
