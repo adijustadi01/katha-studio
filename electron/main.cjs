@@ -1,7 +1,7 @@
 // Katha Studio — Electron main process.
 // Real files on disk, atomic saves, rolling backups, crash recovery, native
 // menus, Chromium PDF export, file association and auto-update.
-const { app, BrowserWindow, ipcMain, dialog, Menu, shell, safeStorage, session } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, shell, safeStorage, session, screen } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -79,13 +79,18 @@ app.on('open-file', (e, p) => {
 // ------------------------------------------------------------------ window
 function createWindow() {
   const state = readJSON(path.join(userData(), 'window.json'), { width: 1400, height: 900 });
+  // keep the window (and its status bar) on screen, e.g. 1366x768 laptops at 125-150% scaling
+  const wa = screen.getDisplayMatching({ x: state.x ?? 0, y: state.y ?? 0, width: state.width, height: state.height }).workArea;
+  const width = Math.min(state.width, wa.width);
+  const height = Math.min(state.height, wa.height);
+  const onScreen = state.x != null && state.y != null && state.x >= wa.x && state.y >= wa.y && state.x + width <= wa.x + wa.width && state.y + height <= wa.y + wa.height;
   win = new BrowserWindow({
-    width: state.width,
-    height: state.height,
-    x: state.x,
-    y: state.y,
-    minWidth: 900,
-    minHeight: 600,
+    width,
+    height,
+    x: onScreen ? state.x : undefined,
+    y: onScreen ? state.y : undefined,
+    minWidth: Math.min(900, wa.width),
+    minHeight: Math.min(560, wa.height),
     title: 'Katha Studio',
     backgroundColor: '#1f1b2e',
     icon: path.join(__dirname, '..', 'build', 'icon.png'),
