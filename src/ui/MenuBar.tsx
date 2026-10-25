@@ -125,6 +125,10 @@ export function MenuBar() {
   const bar = useRef<HTMLDivElement>(null);
   const altAlone = useRef(false);
   const state = useRef({ open, active, sub, subActive, kbTitle });
+  // keep the keyboard-highlighted item visible in a scrolling menu
+  useEffect(() => {
+    bar.current?.querySelector('.menu.open > .menu-list > .menu-item.active')?.scrollIntoView({ block: 'nearest' });
+  }, [open, active]);
   state.current = { open, active, sub, subActive, kbTitle };
 
   const openMenu = (i: number, highlightFirst = false) => {
@@ -355,7 +359,7 @@ export function MenuBar() {
             {t(m.label)}
           </button>
           {open === i && (
-            <div class="menu-list" role="menu">
+            <div class="menu-list" role="menu" ref={fitList}>
               {m.items.map((e, j) => renderItem(e, j, active === j, () => setActive(j)))}
             </div>
           )}
@@ -363,6 +367,21 @@ export function MenuBar() {
       ))}
     </div>
   );
+}
+
+/**
+ * A menu taller than the window scrolls instead of running off the bottom (small or scaled
+ * screens). Menus with submenus keep overflow visible so their flyouts are not clipped.
+ */
+function fitList(el: HTMLDivElement | null) {
+  if (!el) return;
+  el.style.maxHeight = '';
+  el.style.overflowY = '';
+  const room = window.innerHeight - el.getBoundingClientRect().top - 6;
+  if (el.scrollHeight > room && !el.querySelector('.has-sub')) {
+    el.style.maxHeight = Math.max(120, room) + 'px';
+    el.style.overflowY = 'auto';
+  }
 }
 
 function nextEnabled(items: MenuEntry[], from: number, dir: 1 | -1): number {
