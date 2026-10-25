@@ -300,7 +300,7 @@ export function MenuBar() {
           <span>{t(e.label)}</span>
           <span class="kbd">▸</span>
           {subOpen && (
-            <div class="menu-list submenu" role="menu" onMouseEnter={() => clearTimeout(subTimer.current)}>
+            <div class="menu-list submenu" role="menu" ref={fitSubmenu} onMouseEnter={() => clearTimeout(subTimer.current)}>
               {e.items.map((x, k) => renderItem(x, k, subActive === k, () => setSubActive(k), true))}
             </div>
           )}
@@ -381,6 +381,24 @@ function fitList(el: HTMLDivElement | null) {
   if (el.scrollHeight > room && !el.querySelector('.has-sub')) {
     el.style.maxHeight = Math.max(120, room) + 'px';
     el.style.overflowY = 'auto';
+  }
+}
+
+/** Keep a submenu inside the window: shift it up near the bottom edge; at the right edge flip it left, or overlap its menu if neither side has room. */
+function fitSubmenu(el: HTMLDivElement | null) {
+  if (!el) return;
+  el.style.top = '';
+  el.style.left = '';
+  el.style.right = '';
+  const r = el.getBoundingClientRect();
+  const over = r.bottom - (window.innerHeight - 6);
+  if (over > 0) el.style.top = -5 - Math.min(over, r.top - 6) + 'px';
+  if (r.right > window.innerWidth - 6) {
+    const entry = (el.parentElement as HTMLElement).getBoundingClientRect();
+    if (entry.left - r.width >= 6) {
+      el.style.left = 'auto';
+      el.style.right = '100%';
+    } else el.style.left = Math.max(6, window.innerWidth - 6 - r.width) - entry.left + 'px'; // overlap the parent menu
   }
 }
 
