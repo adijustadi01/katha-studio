@@ -30,6 +30,14 @@ export function templateCSS(t: Template, indicStyle: 'sans' | 'serif'): string {
   rules.push(`.ProseMirror .el.dual-left.el-character{margin-left:2.4in}`);
   rules.push(`.ProseMirror .el.dual-right.el-dialogue,.ProseMirror .el.dual-right.el-parenthetical{margin-left:4.6in;width:2.9in}`);
   rules.push(`.ProseMirror .el.dual-right.el-character{margin-left:5.4in;width:2.1in}`);
+  // phones: the page reflows to the screen width, keeping each element's indent proportionally
+  const m: string[] = [];
+  for (const [type, e] of Object.entries(t.elements)) {
+    const l = Math.max(0, ((e.left - 1.5) / 6) * 100);
+    m.push(`.ProseMirror .el-${type}{margin-left:${l.toFixed(1)}%;width:${Math.min(100 - l, (e.width / 6) * 100).toFixed(1)}%}`);
+  }
+  m.push(`.ProseMirror .el.dual-left,.ProseMirror .el.dual-right{margin-left:12%;width:76%}`);
+  rules.push(`@media (max-width:700px){${m.join('')}}`);
   for (const c of BREAKDOWN_CATEGORIES) rules.push(`.ProseMirror .bd-${c.id}{background:${c.color}2e;border-bottom:2px solid ${c.color}}`);
   return rules.join('\n');
 }

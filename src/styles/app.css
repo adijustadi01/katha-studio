@@ -1146,3 +1146,110 @@ kbd {
   outline-offset: -2px;
   background: var(--panel2);
 }
+
+/* ------------------------------------------------------------------ phones */
+.m-only,
+.drawer-backdrop {
+  display: none;
+}
+@media (max-width: 700px) {
+  .m-only {
+    display: inline-flex;
+  }
+  .m-hide,
+  .toolbar .sep,
+  .menubar .brand span,
+  .statusbar .half {
+    display: none !important;
+  }
+  /* menu titles wrap instead of running off screen; menus fit the width */
+  .menubar {
+    flex-wrap: wrap;
+    padding: 2px 4px;
+  }
+  .menu > button {
+    padding: 6px 7px;
+  }
+  .menu-list {
+    position: fixed;
+    left: 4px !important;
+    right: 4px;
+    top: auto;
+    min-width: 0;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  .menu-list.submenu {
+    position: static;
+    margin: 2px 0 2px 12px;
+    box-shadow: none;
+    max-height: none;
+  }
+  .toolbar {
+    gap: 4px;
+    padding: 4px 6px;
+  }
+  .toolbar select.element-select {
+    max-width: 150px;
+  }
+  /* side panels become drawers over the script */
+  .body {
+    grid-template-columns: 1fr;
+    position: relative;
+  }
+  .sidebar,
+  .rightpanel {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: min(86vw, 340px);
+    z-index: 60;
+    box-shadow: var(--shadow);
+  }
+  .sidebar.collapsed,
+  .rightpanel.collapsed {
+    box-shadow: none;
+  }
+  .sidebar {
+    left: 0;
+  }
+  .rightpanel {
+    right: 0;
+  }
+  .drawer-backdrop {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 55;
+    background: rgba(0, 0, 0, 0.35);
+  }
+  /* the script page fills the screen */
+  .page-wrap {
+    width: auto !important;
+    zoom: 1 !important;
+    margin: 0 0 80px;
+  }
+  .ProseMirror {
+    width: auto !important;
+    padding: 14px 12px 40px !important;
+    font-size: 15px !important;
+    line-height: 1.45 !important;
+    box-shadow: none;
+  }
+  .ProseMirror .el.ind {
+    line-height: 1.6 !important;
+  }
+  .ProseMirror .scene-no,
+  .ProseMirror .pb-num {
+    display: none;
+  }
+  .statusbar {
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .dialog {
+    width: calc(100vw - 16px) !important;
+    max-width: none !important;
+    max-height: calc(100vh - 16px);
+  }
+}

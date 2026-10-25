@@ -57,6 +57,11 @@ function load(): Prefs {
 }
 
 export const prefs: Prefs = load();
+// phones start with the script full screen; the side panels open as drawers
+if (typeof matchMedia !== 'undefined' && matchMedia('(max-width: 700px)').matches) {
+  prefs.sidebar = null;
+  prefs.rightPanel = null;
+}
 
 export function savePrefs() {
   try {

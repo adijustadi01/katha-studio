@@ -115,7 +115,11 @@ export function Navigator() {
                   if (drag) moveScene(drag, sc.id);
                   setDrag(null);
                 }}
-                onClick={() => goTo(sc.id)}
+                onClick={() => {
+                  goTo(sc.id);
+                  // phones: close the drawer to show the scene
+                  if (matchMedia('(max-width: 700px)').matches) (prefs.sidebar = null), store.savePrefs();
+                }}
                 title={sc.heading}
               >
                 <span class="no">{sc.number}</span>

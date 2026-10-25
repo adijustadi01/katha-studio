@@ -48,7 +48,13 @@ export function Toolbar() {
           );
         })}
       </select>
-      <button class="ghost" title="Dual dialogue (Ctrl+D)" onClick={() => runCommand('format.dual')}>
+      <button class="ghost m-only" title="Scenes" onClick={() => runCommand('view.sidebar')}>
+        ☰
+      </button>
+      <button class="ghost m-only" title="Scene panel (tags, breakdown)" onClick={() => runCommand('view.rightpanel')}>
+        🏷
+      </button>
+      <button class="ghost m-hide" title="Dual dialogue (Ctrl+D)" onClick={() => runCommand('format.dual')}>
         ⫴ Dual
       </button>
       <div class="sep" />
@@ -69,21 +75,21 @@ export function Toolbar() {
         ))}
       </div>
       <div class="sep" />
-      <div class="lang-switch" data-tour="views">
+      <div class="lang-switch m-hide" data-tour="views">
         {(['page', 'draft', 'speed'] as const).map((m) => (
           <button key={m} class={prefs.mode === m ? 'on' : ''} onClick={() => setMode(m)} title={t(m === 'page' ? 'Page View' : m === 'draft' ? 'Draft View' : 'Speed View')}>
             {m === 'page' ? '▤ Page' : m === 'draft' ? '≡ Draft' : '⚡ Speed'}
           </button>
         ))}
       </div>
-      <button class={'ghost' + (prefs.focusMode ? ' on' : '')} title={t('Focus Mode')} onClick={() => runCommand('view.focus')}>
+      <button class={'ghost m-hide' + (prefs.focusMode ? ' on' : '')} title={t('Focus Mode')} onClick={() => runCommand('view.focus')}>
         ◎
       </button>
-      <button class="ghost" title={t('Zoom Out')} onClick={() => runCommand('view.zoomOut')}>
+      <button class="ghost m-hide" title={t('Zoom Out')} onClick={() => runCommand('view.zoomOut')}>
         −
       </button>
-      <span class="small muted">{Math.round(prefs.zoom * 100)}%</span>
-      <button class="ghost" title={t('Zoom In')} onClick={() => runCommand('view.zoomIn')}>
+      <span class="small muted m-hide">{Math.round(prefs.zoom * 100)}%</span>
+      <button class="ghost m-hide" title={t('Zoom In')} onClick={() => runCommand('view.zoomIn')}>
         +
       </button>
       <div class="sep" />

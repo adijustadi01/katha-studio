@@ -33,6 +33,9 @@ export function App() {
             {s.main !== 'script' && <MainViews />}
           </main>
           <RightPanel />
+          {(prefs.sidebar || prefs.rightPanel) && (
+            <div class="drawer-backdrop" onClick={() => ((prefs.sidebar = null), (prefs.rightPanel = null), store.savePrefs())} />
+          )}
         </div>
       ) : (
         <Welcome />
