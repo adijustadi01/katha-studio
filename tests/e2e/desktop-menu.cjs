@@ -30,6 +30,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     v.focus();
   });
   const selBefore = await page.evaluate(() => window.__view.state.selection.from);
+  void selBefore;
   await app.evaluate(({ BrowserWindow, Menu }) => {
     global.mlog = [];
     const w = BrowserWindow.getAllWindows()[0];
@@ -132,6 +133,37 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     if (d) await page.evaluate(() => window.__katha.closeDialog());
   }
 
+  // 1b. the menu stays open while the app is busy (typing, autosave, layout, toasts)
+  for (const t of [titles[0], titles[1]]) {
+    input([['click', t.x, barY]]);
+    await sleep(300);
+    await page.evaluate(() => {
+      const v = window.__view;
+      v.dispatch(v.state.tr.insertText(' busy'));
+      window.__katha.toast('working…');
+      window.__katha.autosave();
+    });
+    await sleep(800);
+    await page.evaluate(() => {
+      const v = window.__view;
+      v.dispatch(v.state.tr.insertText('!'));
+      window.__runCommand && window.__katha.emit();
+    });
+    input([['sleep', 1200], ['shot', path.join(OUT, 'busy-' + t.label + '.png')]]);
+    await sleep(500);
+    const log = await take();
+    const d = await dialog();
+    check(`${t.label} stays open while the app is busy`, log.includes('show ' + t.label) && !log.some((l) => l.startsWith('close')), log);
+    check(`no command runs while ${t.label} is open and the app is busy`, !log.some((l) => l.startsWith('CMD')) && !d, { log, dialog: d });
+    input([['key', 'Escape']]);
+    await sleep(400);
+    await take();
+    if (d) await page.evaluate(() => window.__katha.closeDialog());
+  }
+
+  // the busy step typed text before the cursor: measure the cursor again from here
+  const selMid = await page.evaluate(() => window.__view.state.selection.from);
+
   // 2. hover switching
   input([['click', titles[0].x, barY]]);
   await sleep(600);
@@ -159,7 +191,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   // 5. the script cursor survived all of this
   const selAfter = await page.evaluate(() => window.__view.state.selection.from);
-  check('cursor position in the script is unchanged', selAfter === selBefore, { selBefore, selAfter });
+  check('cursor position in the script is unchanged by menu use', selAfter === selMid, { selMid, selAfter });
 
   fs.writeFileSync(path.join(OUT, 'desktop-menu-results.json'), JSON.stringify({ platform: process.platform, info, results }, null, 1));
   await Promise.race([app.close(), sleep(5000)]);

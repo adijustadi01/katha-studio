@@ -22,7 +22,8 @@ const VK = { Escape: 0x1b, Down: 0x28, Up: 0x26, Left: 0x25, Right: 0x27, Return
 function win(cmds) {
   let ps = PS_PRELUDE;
   for (const c of cmds) {
-    if (c[0] === 'move') ps += `[KIn]::SetCursorPos(${c[1]}, ${c[2]}) | Out-Null; Start-Sleep -Milliseconds 40\n`;
+    // SetCursorPos alone moves the pointer without a mouse-move input event; menus track input events
+    if (c[0] === 'move') ps += `[KIn]::SetCursorPos(${c[1]}, ${c[2]}) | Out-Null; [KIn]::mouse_event(1,0,0,0,[IntPtr]::Zero); Start-Sleep -Milliseconds 40\n`;
     if (c[0] === 'down') ps += `[KIn]::mouse_event(2,0,0,0,[IntPtr]::Zero); Start-Sleep -Milliseconds 30\n`;
     if (c[0] === 'up') ps += `[KIn]::mouse_event(4,0,0,0,[IntPtr]::Zero); Start-Sleep -Milliseconds 30\n`;
     if (c[0] === 'click') ps += `[KIn]::SetCursorPos(${c[1]}, ${c[2]}) | Out-Null; Start-Sleep -Milliseconds 60; [KIn]::mouse_event(2,0,0,0,[IntPtr]::Zero); Start-Sleep -Milliseconds 90; [KIn]::mouse_event(4,0,0,0,[IntPtr]::Zero)\n`;
