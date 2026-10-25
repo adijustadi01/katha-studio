@@ -40,7 +40,14 @@ if (platform.onMenu)
     else void runCommand(cmd);
   });
 if (platform.setMenu) {
-  const send = () => platform.setMenu!(nativeMenus());
+  let last = '';
+  const send = () => {
+    const m = nativeMenus();
+    const sig = JSON.stringify(m);
+    if (sig === last) return; // only tell the main process when something actually changed
+    last = sig;
+    platform.setMenu!(m);
+  };
   send();
   let t: any = null;
   store.subscribe(() => {
@@ -88,5 +95,6 @@ if (!prefs.tutorialDone) setTimeout(() => store.openDialog('tutorial'), 800);
 
 // test hook for automated checks
 (window as any).__runCommand = runCommand;
+(window as any).__cmdLog = [];
 import { buildPrintHTML } from './app/exporter';
 (window as any).__exporter = { buildPrintHTML };

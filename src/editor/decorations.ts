@@ -173,7 +173,8 @@ function buildDecorations(doc: PMNode, cfg: DecoConfig, sel: EditorState['select
           const btn = document.createElement('button');
           btn.className = 'bm-edit';
           btn.textContent = '✎ Edit';
-          btn.onmousedown = (e) => {
+          btn.onmousedown = (e) => e.preventDefault();
+          btn.onclick = (e) => {
             e.preventDefault();
             config?.onEditBlock?.(id);
           };

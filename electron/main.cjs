@@ -196,27 +196,96 @@ function accel(k) {
     .join('+')
     .replace('CmdOrCtrl+=', 'CmdOrCtrl+Plus');
 }
-ipcMain.on('set-menu', (_e, menus) => {
-  const template = menus.map((m) => ({
-    label: m.label,
-    submenu: m.items.map((it) => {
-      if (it === '-') return { type: 'separator' };
-      if (it.role) return { role: it.role };
-      return {
-        label: it.label,
-        type: it.checked === undefined ? 'normal' : 'checkbox',
-        checked: !!it.checked,
-        enabled: it.enabled !== false,
-        accelerator: accel(it.keys),
-        // keys are handled inside the window so text fields keep their own shortcuts
-        registerAccelerator: false,
-        click: () => win && win.webContents.send('menu', it.id),
-      };
-    }),
-  }));
+// The menu is built once and then only updated in place. Rebuilding the
+// application menu while one of its menus is open can close it and deliver the
+// pending click to an item of the new menu, so structural rebuilds wait until
+// every menu is closed, and activations that arrive right after a menu opened
+// (the release of the click that opened it) are ignored.
+let menuSig = '';
+let openMenus = 0;
+let lastMenuShown = 0;
+let pendingMenus = null;
+const OPEN_GUARD_MS = 400;
+const escLabel = (l) => String(l).replace(/&/g, '&&');
+
+function structureOf(menus) {
+  const strip = (items) => items.map((it) => (typeof it === 'string' ? it : it.role ? { role: it.role } : it.items ? { label: it.label, items: strip(it.items) } : { id: it.id, label: it.label, keys: it.keys, check: it.checked !== undefined }));
+  return JSON.stringify(menus.map((m) => ({ label: m.label, items: strip(m.items) })));
+}
+
+function buildItems(items) {
+  return items.map((it) => {
+    if (it === '-') return { type: 'separator' };
+    if (it.role) return { role: it.role };
+    if (it.items) return { label: escLabel(it.label), submenu: buildItems(it.items) };
+    return {
+      id: it.id,
+      label: escLabel(it.label),
+      type: it.checked === undefined ? 'normal' : 'checkbox',
+      checked: !!it.checked,
+      enabled: it.enabled !== false,
+      accelerator: accel(it.keys),
+      // keys are handled inside the window so text fields keep their own shortcuts
+      registerAccelerator: false,
+      click: () => {
+        if (Date.now() - lastMenuShown < OPEN_GUARD_MS) return; // the opening click never runs an item
+        if (win) win.webContents.send('menu', it.id);
+      },
+    };
+  });
+}
+
+function watchOpen(menu) {
+  for (const item of menu.items) {
+    if (!item.submenu) continue;
+    item.submenu.on('menu-will-show', () => {
+      openMenus++;
+      lastMenuShown = Date.now();
+    });
+    item.submenu.on('menu-will-close', () => {
+      openMenus = Math.max(0, openMenus - 1);
+      if (!openMenus && pendingMenus) setTimeout(() => applyMenus(pendingMenus), 50);
+    });
+    watchOpen(item.submenu);
+  }
+}
+
+function updateStates(items) {
+  const m = Menu.getApplicationMenu();
+  if (!m) return;
+  for (const it of items) {
+    if (!it || typeof it === 'string' || it.role) continue;
+    if (it.items) {
+      updateStates(it.items);
+      continue;
+    }
+    const mi = m.getMenuItemById(it.id);
+    if (!mi) continue;
+    if (it.checked !== undefined && mi.checked !== !!it.checked) mi.checked = !!it.checked;
+    const en = it.enabled !== false;
+    if (mi.enabled !== en) mi.enabled = en;
+  }
+}
+
+function applyMenus(menus) {
+  if (openMenus > 0) {
+    pendingMenus = menus; // never touch the menu while it is open
+    return;
+  }
+  pendingMenus = null;
+  const sig = structureOf(menus);
+  if (sig === menuSig) {
+    for (const m of menus) updateStates(m.items);
+    return;
+  }
+  menuSig = sig;
+  const template = menus.map((m) => ({ label: escLabel(m.label), submenu: buildItems(m.items) }));
   if (process.platform === 'darwin') template.unshift({ role: 'appMenu' });
-  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
-});
+  const menu = Menu.buildFromTemplate(template);
+  watchOpen(menu);
+  Menu.setApplicationMenu(menu);
+}
+ipcMain.on('set-menu', (_e, menus) => applyMenus(menus));
 
 // ------------------------------------------------------------------ files
 const FILTERS = [

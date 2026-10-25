@@ -3,8 +3,8 @@ name: Desktop menu test
 on:
   workflow_dispatch:
   push:
-    branches: ['claude/**']
-    paths: ['electron/**', 'src/ui/MenuBar.tsx', 'tests/e2e/**', '.github/workflows/menu-test.yml']
+    branches: ['claude/**', main]
+    paths: ['electron/**', 'src/ui/MenuBar.tsx', 'src/main.tsx', 'tests/e2e/**', '.github/workflows/menu-test.yml']
 
 jobs:
   windows:
@@ -12,23 +12,32 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        app: ['current', 'v1.0.0']
         scale: ['1', '1.5']
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Use the released v1.0.0 app code (test harness stays current)
+        if: matrix.app != 'current'
+        shell: bash
+        run: git checkout ${{ matrix.app }} -- electron src
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx playwright@1 --version
       - run: node scripts/build-desktop.mjs
       - name: Real-input menu test (Windows)
+        continue-on-error: ${{ matrix.app != 'current' }}
         env:
           SCALE: ${{ matrix.scale }}
           OUT: ${{ runner.temp }}/menu-test
-        run: npm i --no-save playwright@1 && node tests/e2e/desktop-menu.cjs
+        run: |
+          npm i --no-save playwright@1
+          node tests/e2e/desktop-menu.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: menu-test-windows-${{ matrix.scale }}
+          name: menu-test-${{ matrix.app }}-${{ matrix.scale }}
           path: ${{ runner.temp }}/menu-test

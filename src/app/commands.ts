@@ -36,6 +36,7 @@ export function allCommands() {
   return [...cmds.values()];
 }
 export async function runCommand(id: string) {
+  (globalThis as any).__cmdLog?.push(id);
   const c = cmds.get(id);
   if (!c) return;
   if (c.needsProject && !store.project) return;

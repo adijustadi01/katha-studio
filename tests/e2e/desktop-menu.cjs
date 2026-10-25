@@ -60,23 +60,42 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   });
   const sf = info.sf;
   const px = (v) => Math.round(v * sf);
-  const barY = px((info.win.y + info.content.y) / 2 + 0.5);
+  // the menu bar sits directly above the web contents (below the title bar on Windows)
+  const barY = px(info.content.y - 10);
   const take = async () => (await app.evaluate(() => global.mlog.splice(0)));
-  // locate each title by probing the menu bar with real clicks (font metrics differ per OS)
+  // locate each title by probing the menu bar with real clicks (font metrics differ per OS);
+  // one batch of input with timestamps, matched against the main-process menu log
+  const timed = async () => (await app.evaluate(() => global.mlog.splice(0)));
+  await app.evaluate(() => {
+    const push = global.mlog.push.bind(global.mlog);
+    global.mlog.push = (s) => push(s + ' @' + Date.now());
+  });
+  const probe = [];
+  for (let dx = 6; dx < 460; dx += 10) probe.push(['stamp', dx], ['click', px(info.win.x + dx), barY], ['sleep', 220], ['key', 'Escape'], ['sleep', 120]);
+  probe.push(['stamp', 'end']);
+  const stamps = input(probe)
+    .split(/\r?\n/)
+    .filter((l) => l.startsWith('STAMP'))
+    .map((l) => l.split(' '))
+    .map(([, k, t]) => ({ k, t: Number(t) }));
+  const plog = (await timed()).map((l) => ({ text: l.replace(/ @\d+$/, ''), t: Number(l.match(/@(\d+)$/)?.[1]) }));
+  await app.evaluate(() => {
+    delete global.mlog.push;
+  });
   const hits = {};
-  for (let dx = 4; dx < 520; dx += 8) {
-    const xx = px(info.win.x + dx);
-    input([['click', xx, barY]]);
-    await sleep(250);
-    const l = await take();
-    const shown = l.filter((e) => e.startsWith('show ')).pop();
-    if (shown) (hits[shown.slice(5)] ||= []).push(xx);
-    input([['key', 'Escape']]);
-    await sleep(150);
-    await take();
-    if (Object.keys(hits).length === info.labels.length && !shown) break;
+  for (let i = 0; i < stamps.length - 1; i++) {
+    const shown = plog.find((e) => e.t >= stamps[i].t && e.t < stamps[i + 1].t && e.text.startsWith('show '));
+    if (shown) (hits[shown.text.slice(5)] ||= []).push(px(info.win.x + Number(stamps[i].k)));
   }
+  const probeCmds = plog.filter((e) => e.text.startsWith('CMD')).map((e) => e.text);
+  console.log('probe commands triggered by single clicks:', JSON.stringify(probeCmds));
+  fs.writeFileSync(path.join(OUT, 'probe-log.json'), JSON.stringify({ stamps, plog }, null, 1));
   await page.evaluate(() => window.__katha.closeDialog());
+  if (!Object.keys(hits).length) {
+    input([['click', px(info.win.x + 20), barY], ['sleep', 600], ['shot', path.join(OUT, 'no-menu-found.png')], ['key', 'Escape']]);
+    console.log('no menu titles found; screenshot saved', JSON.stringify(info));
+    process.exit(3);
+  }
   const titles = info.labels.filter((l) => hits[l]).map((l) => ({ label: l, x: Math.round((Math.min(...hits[l]) + Math.max(...hits[l])) / 2) }));
   console.log('titles', JSON.stringify(titles));
   const dialog = () => page.evaluate(() => window.__katha.dialog && window.__katha.dialog.kind);
@@ -100,11 +119,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await take();
   // 1. one click opens each menu; it stays open 2 s; nothing is triggered
   for (const t of titles) {
-    input([['click', t.x, barY]]);
-    await sleep(2000);
+    input([['click', t.x, barY], ['sleep', 1000], ['shot', path.join(OUT, 'open-' + t.label + '.png')]]);
+    await sleep(1000);
     const log = await take();
     const d = await dialog();
-    shot('open-' + t.label);
     check(`click opens ${t.label} and it stays open for 2s`, log.includes('show ' + t.label) && !log.includes('close ' + t.label), log);
     check(`opening click of ${t.label} triggers nothing`, !log.some((l) => l.startsWith('CMD')) && !d, { log, dialog: d });
     input([['key', 'Escape']]);

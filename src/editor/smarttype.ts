@@ -113,6 +113,7 @@ export function smartTypePlugin(): Plugin {
   let dismissedFor = '';
   let box: HTMLDivElement | null = null;
   let enabled = true;
+  let armed = -1;
 
   const render = (view: EditorView) => {
     if (!box) return;
@@ -125,9 +126,15 @@ export function smartTypePlugin(): Plugin {
       const d = document.createElement('div');
       d.className = 'st-item' + (i === current!.index ? ' active' : '');
       d.textContent = it;
+      // press keeps focus in the script; the suggestion is taken on a full click on it
       d.onmousedown = (ev) => {
         ev.preventDefault();
-        current!.index = i;
+        armed = i;
+      };
+      d.onclick = () => {
+        if (armed !== i || !current) return;
+        armed = -1;
+        current.index = i;
         accept(view);
       };
       box!.appendChild(d);

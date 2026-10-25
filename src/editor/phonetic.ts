@@ -35,6 +35,7 @@ export function phoneticPlugin(): Plugin {
   let comp: Comp | null = null;
   let box: HTMLDivElement | null = null;
   let internal = false;
+  let armed = -1;
 
   const render = (view: EditorView) => {
     if (!box) return;
@@ -54,6 +55,11 @@ export function phoneticPlugin(): Plugin {
       d.appendChild(document.createTextNode(c));
       d.onmousedown = (e) => {
         e.preventDefault();
+        armed = i;
+      };
+      d.onclick = () => {
+        if (armed !== i || !comp) return;
+        armed = -1;
         choose(view, i, true);
       };
       box!.appendChild(d);

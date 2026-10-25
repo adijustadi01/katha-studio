@@ -14,6 +14,8 @@ public static class KIn {
 }
 "@
 [KIn]::SetProcessDPIAware() | Out-Null
+Add-Type -AssemblyName System.Drawing, System.Windows.Forms
+function Shot($p) { $b = [System.Windows.Forms.SystemInformation]::VirtualScreen; $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height; $g = [System.Drawing.Graphics]::FromImage($bmp); $g.CopyFromScreen($b.Left, $b.Top, 0, 0, $bmp.Size); $bmp.Save($p); $g.Dispose(); $bmp.Dispose() }
 `;
 const VK = { Escape: 0x1b, Down: 0x28, Up: 0x26, Left: 0x25, Right: 0x27, Return: 0x0d, F10: 0x79, Alt: 0x12 };
 
@@ -24,15 +26,35 @@ function win(cmds) {
     if (c[0] === 'down') ps += `[KIn]::mouse_event(2,0,0,0,[IntPtr]::Zero); Start-Sleep -Milliseconds 30\n`;
     if (c[0] === 'up') ps += `[KIn]::mouse_event(4,0,0,0,[IntPtr]::Zero); Start-Sleep -Milliseconds 30\n`;
     if (c[0] === 'click') ps += `[KIn]::SetCursorPos(${c[1]}, ${c[2]}) | Out-Null; Start-Sleep -Milliseconds 60; [KIn]::mouse_event(2,0,0,0,[IntPtr]::Zero); Start-Sleep -Milliseconds 90; [KIn]::mouse_event(4,0,0,0,[IntPtr]::Zero)\n`;
+    if (c[0] === 'sleep') ps += `Start-Sleep -Milliseconds ${c[1]}\n`;
+    if (c[0] === 'stamp') ps += `Write-Output ("STAMP ${c[1]} " + [DateTimeOffset]::Now.ToUnixTimeMilliseconds())\n`;
+    if (c[0] === 'shot') ps += `Shot '${c[1]}'\n`;
     if (c[0] === 'key') ps += `[KIn]::keybd_event(${VK[c[1]]},0,0,[IntPtr]::Zero); Start-Sleep -Milliseconds 40; [KIn]::keybd_event(${VK[c[1]]},0,2,[IntPtr]::Zero); Start-Sleep -Milliseconds 40\n`;
   }
-  execFileSync('powershell', ['-NoProfile', '-Command', ps], { stdio: 'inherit' });
+  return execFileSync('powershell', ['-NoProfile', '-Command', ps], { encoding: 'utf8' });
 }
 
 function x11(cmds) {
-  const args = [];
-  for (const c of cmds) args.push(...c.map(String));
-  execFileSync('python3', [path.join(__dirname, 'xinput.py'), ...args]);
+  // stamps and shots are handled here; the rest goes to the XTEST helper in order
+  let out = '';
+  let batch = [];
+  const flush = () => {
+    if (batch.length) execFileSync('python3', [path.join(__dirname, 'xinput.py'), ...batch]);
+    batch = [];
+  };
+  for (const c of cmds) {
+    if (c[0] === 'stamp') {
+      flush();
+      out += `STAMP ${c[1]} ${Date.now()}\n`;
+    } else if (c[0] === 'shot') {
+      flush();
+      try {
+        execFileSync('import', ['-window', 'root', c[1]]);
+      } catch {}
+    } else batch.push(...c.map(String));
+  }
+  flush();
+  return out;
 }
 
 /** Move the pointer in small steps (menus react to motion, not jumps). */

@@ -28,5 +28,5 @@ while args:
     elif c == 'click':
         move(args.pop(0), args.pop(0)); time.sleep(0.05); btn(True); time.sleep(0.08); btn(False)
     elif c == 'key': key(args.pop(0))
-    elif c == 'sleep': time.sleep(float(args.pop(0)))
+    elif c == 'sleep': time.sleep(float(args.pop(0)) / 1000.0)
     time.sleep(0.02)
