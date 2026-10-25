@@ -132,9 +132,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     check(`click opens ${t.label} and it stays open for 2s`, log.includes('show ' + t.label) && !log.includes('close ' + t.label), log);
     check(`opening click of ${t.label} triggers nothing`, !log.some((l) => l.startsWith('CMD')) && !d, { log, dialog: d });
     input([['key', 'Escape']]);
-    await sleep(400);
-    const l2 = await take();
-    check(`Esc closes ${t.label}`, l2.includes('close ' + t.label) || !l2.length, l2);
+    // wait (up to 2 s) for the menu's close event, so the next step starts with no menu open
+    let l2 = [];
+    for (let k = 0; k < 20 && !l2.includes('close ' + t.label); k++) {
+      await sleep(100);
+      l2 = l2.concat(await take());
+    }
+    check(`Esc closes ${t.label}`, l2.includes('close ' + t.label), l2);
     if (d) await page.evaluate(() => window.__katha.closeDialog());
   }
 
