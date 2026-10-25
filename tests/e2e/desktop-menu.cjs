@@ -158,7 +158,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     await sleep(500);
     const log = await take();
     const d = await dialog();
-    check(`${t.label} stays open while the app is busy`, log.includes('show ' + t.label) && !log.some((l) => l.startsWith('close')), log);
+    // events before this menu's 'show' are late echoes of the previous step
+    const since = log.slice(Math.max(0, log.indexOf('show ' + t.label)));
+    check(`${t.label} stays open while the app is busy`, since[0] === 'show ' + t.label && !since.some((l) => l.startsWith('close')), log);
     check(`no command runs while ${t.label} is open and the app is busy`, !log.some((l) => l.startsWith('CMD')) && !d, { log, dialog: d });
     input([['key', 'Escape']]);
     await sleep(400);
@@ -231,19 +233,23 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   if (process.platform === 'win32' && !hovered) console.log('INFO  hovering switches between open menus: not observable with injected input on Windows', JSON.stringify(log));
   else check('hovering switches between open menus', hovered, log);
 
-  // 3. clicking outside closes, without running anything
-  input([['click', px(info.content.x + info.content.width / 2), px(info.content.y + info.content.height - 8)]]);
+  // 3. clicking outside closes, without running anything (bottom-right corner: the open menu's popup
+  // can reach the bottom of a short window)
+  input([['click', px(info.content.x + info.content.width - 12), px(info.content.y + info.content.height - 8)]]);
   await sleep(600);
   log = await take();
   check('click outside closes the menu without running a command', log.some((l) => l.startsWith('close')) && !log.some((l) => l.startsWith('CMD')), log);
 
-  // 4. a deliberate keyboard selection works: open Help, Down, Enter → first Help item
-  input([['click', titles[titles.length - 1].x, barY]]);
+  // 4. a deliberate keyboard selection works: open the last menu on the bar's first row (Help on a
+  // wide window), Down, Enter → its first item
+  const last = titles[titles.length - 1];
+  const prefix = { Help: 'help.', Tools: 'tools.', Production: 'prod', Script: 'script.' }[last.label] || '';
+  input([['click', last.x, barY]]);
   await sleep(800);
   input([['key', 'Down'], ['key', 'Return']]);
   await sleep(800);
   log = await take();
-  check('Down + Enter runs the highlighted item', log.some((l) => l.startsWith('CMD help.')), log);
+  check('Down + Enter runs the highlighted item', log.some((l) => l.startsWith('CMD ' + prefix)), log);
   await page.evaluate(() => window.__katha.closeDialog());
 
   // 5. the script cursor survived all of this
