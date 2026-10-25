@@ -113,7 +113,22 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   check('hover switches Edit → View', (await openMenu()) === 'View', { open: await openMenu() });
 
   // click outside closes; nothing runs
-  const sb = await box('.statusbar');
+  // a status-bar point not covered by the open menu (in a short window the menu reaches the bottom)
+  await page.evaluate(() => {
+    document.querySelectorAll('[data-outside-target]').forEach((e) => e.removeAttribute('data-outside-target'));
+    const r = document.querySelector('.statusbar').getBoundingClientRect();
+    for (let x = r.right - 12; x > r.left; x -= 12) {
+      const el = document.elementFromPoint(x, r.top + r.height / 2);
+      if (el && el.closest('.statusbar')) {
+        const m = document.createElement('div');
+        m.setAttribute('data-outside-target', '');
+        Object.assign(m.style, { position: 'fixed', left: x - 2 + 'px', top: r.top + r.height / 2 - 2 + 'px', width: '4px', height: '4px', pointerEvents: 'none' });
+        document.body.appendChild(m);
+        return;
+      }
+    }
+  });
+  const sb = await box('[data-outside-target]');
   const whoBefore = input([['whois', sb.x, sb.y]]);
   input([['press', sb.x, sb.y, 80]]);
   await sleep(300);
