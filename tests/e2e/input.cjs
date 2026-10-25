@@ -18,6 +18,17 @@ public static class KIn {
   [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
   [StructLayout(LayoutKind.Sequential)] public struct RECT { public int L, T, R, B; }
   [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out RECT r);
+  [StructLayout(LayoutKind.Sequential)] public struct PT { public int X, Y; }
+  [DllImport("user32.dll")] public static extern IntPtr WindowFromPoint(PT p);
+  [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+  [DllImport("user32.dll")] public static extern IntPtr GetAncestor(IntPtr h, uint f);
+  public static string Describe(IntPtr h) {
+    var c = new System.Text.StringBuilder(256); GetClassName(h, c, 256);
+    RECT r; GetWindowRect(h, out r); uint pid; GetWindowThreadProcessId(h, out pid);
+    string pn = ""; try { pn = System.Diagnostics.Process.GetProcessById((int)pid).ProcessName; } catch {}
+    return c.ToString() + "|" + pn + "|" + r.L + "," + r.T + "," + (r.R - r.L) + "x" + (r.B - r.T);
+  }
+  public static string Whois(int x, int y) { var p = new PT(); p.X = x; p.Y = y; return "at=" + Describe(GetAncestor(WindowFromPoint(p), 2)) + " fg=" + Describe(GetForegroundWindow()); }
   public static string Popups() {
     var sb = new System.Text.StringBuilder();
     EnumWindows((h, l) => {
@@ -53,6 +64,7 @@ function win(cmds) {
     if (c[0] === 'sleep') ps += `Start-Sleep -Milliseconds ${c[1]}\n`;
     if (c[0] === 'stamp') ps += `Write-Output ("STAMP ${c[1]} " + [DateTimeOffset]::Now.ToUnixTimeMilliseconds())\n`;
     if (c[0] === 'shot') ps += `Shot '${c[1]}'\n`;
+    if (c[0] === 'whois') ps += `Write-Output ("WHOIS " + [KIn]::Whois(${c[1]}, ${c[2]}))\n`;
     if (c[0] === 'popups') ps += `Write-Output ("POPUPS ${c[1] || ''} " + [KIn]::Popups())\n`;
     if (c[0] === 'press') ps += `[KIn]::SetCursorPos(${c[1]}, ${c[2]}) | Out-Null; Start-Sleep -Milliseconds 60; [KIn]::mouse_event(2,0,0,0,[IntPtr]::Zero); Start-Sleep -Milliseconds ${c[3]}; [KIn]::mouse_event(4,0,0,0,[IntPtr]::Zero)\n`;
     if (c[0] === 'key') ps += `[KIn]::keybd_event(${VK[c[1]]},0,0,[IntPtr]::Zero); Start-Sleep -Milliseconds 40; [KIn]::keybd_event(${VK[c[1]]},0,2,[IntPtr]::Zero); Start-Sleep -Milliseconds 40\n`;
@@ -77,7 +89,7 @@ function x11(cmds) {
       try {
         execFileSync('import', ['-window', 'root', c[1]]);
       } catch {}
-    } else if (c[0] === 'popups') {
+    } else if (c[0] === 'popups' || c[0] === 'whois') {
       // not available on X11: menu state comes from Electron events instead
     } else if (c[0] === 'press') {
       batch.push('move', String(c[1]), String(c[2]), 'down', 'sleep', String(c[3]), 'up');

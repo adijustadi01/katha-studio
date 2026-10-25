@@ -114,8 +114,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   // click outside closes; nothing runs
   const sb = await box('.statusbar');
+  const whoBefore = input([['whois', sb.x, sb.y]]);
   input([['press', sb.x, sb.y, 80]]);
   await sleep(300);
+  sb.who = [whoBefore, input([['whois', sb.x, sb.y]])].map((o) => String(o || '').trim());
   check('click outside closes', (await openMenu()) === null, sb);
   if (await openMenu()) {
     input([['key', 'Escape']]);
