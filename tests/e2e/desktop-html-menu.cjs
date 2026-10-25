@@ -26,17 +26,27 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   check('no system (Electron) menu bar is shown', !sysMenu, { sysMenu });
   await page.click('text=Open sample screenplay');
   await sleep(1500);
-  const geo = await app.evaluate(({ BrowserWindow, screen }) => {
+  await app.evaluate(({ BrowserWindow, screen }) => {
     const w = BrowserWindow.getAllWindows()[0];
     // keep the whole window on screen (at 150% scaling the default size overflows a small display)
     const wa = screen.getPrimaryDisplay().workArea;
     w.unmaximize();
     w.setBounds({ x: wa.x, y: wa.y, width: Math.min(1024, wa.width), height: Math.min(720, wa.height) });
     w.focus();
-    return { content: w.getContentBounds(), sf: screen.getPrimaryDisplay().scaleFactor };
   });
-  const toScreen = (b) => ({ x: Math.round((geo.content.x + b.x + b.width / 2) * geo.sf), y: Math.round((geo.content.y + b.y + b.height / 2) * geo.sf) });
-  const box = async (sel) => toScreen(await page.locator(sel).first().boundingBox());
+  await sleep(500);
+  const geometry = () =>
+    app.evaluate(({ BrowserWindow, screen }) => {
+      const w = BrowserWindow.getAllWindows()[0];
+      const d = screen.getPrimaryDisplay();
+      return { content: w.getContentBounds(), sf: d.scaleFactor, display: d.bounds, workArea: d.workArea };
+    });
+  // window geometry is read fresh for every target (the window may still be settling after the resize)
+  const box = async (sel) => {
+    const geo = await geometry();
+    const b = await page.locator(sel).first().boundingBox();
+    return { x: Math.round((geo.content.x + b.x + b.width / 2) * geo.sf), y: Math.round((geo.content.y + b.y + b.height / 2) * geo.sf), geo, inner: [await page.evaluate(() => [innerWidth, innerHeight])] };
+  };
   const openMenu = () => page.evaluate(() => document.querySelector('.menu.open > button')?.dataset.menu || null);
   const cmds = () => page.evaluate(() => window.__cmdLog.slice());
   const dialog = () => page.evaluate(() => (window.__katha.dialog && window.__katha.dialog.kind) || null);
@@ -106,7 +116,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const sb = await box('.statusbar');
   input([['press', sb.x, sb.y, 80]]);
   await sleep(300);
-  check('click outside closes', (await openMenu()) === null, {});
+  check('click outside closes', (await openMenu()) === null, sb);
+  if (await openMenu()) {
+    input([['key', 'Escape']]);
+    await page.evaluate(() => window.focus());
+    await sleep(200);
+  }
   check('…and nothing runs', !(await cmds()).length, await cmds());
 
   // submenu by hover, then a deliberate click (View → Go to View → Outline)
