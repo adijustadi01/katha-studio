@@ -1,7 +1,7 @@
 {
   "name": "katha-studio",
   "version": "1.0.0",
-  "description": "Katha Studio \u2014 professional screenwriting for Indian film and OTT (Tamil, Telugu, Hindi, Malayalam, Kannada)",
+  "description": "Katha Studio — professional screenwriting for Indian film and OTT (Tamil, Telugu, Hindi, Malayalam, Kannada)",
   "main": "electron/main.cjs",
   "scripts": {
     "fonts": "node scripts/copy-fonts.mjs",
@@ -12,7 +12,9 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "electron": "node scripts/build-desktop.mjs && electron .",
-    "dist:win": "node scripts/build-desktop.mjs && electron-builder --win --publish never"
+    "dist:win": "node scripts/build-desktop.mjs && electron-builder --win --publish never",
+    "test:menus:web": "node tests/e2e/web-menu.cjs",
+    "test:menus:desktop": "node scripts/build-desktop.mjs && node tests/e2e/desktop-html-menu.cjs && node tests/e2e/desktop-menu.cjs"
   },
   "repository": {
     "type": "git",
@@ -62,7 +64,7 @@
   "build": {
     "appId": "studio.katha.app",
     "productName": "Katha Studio",
-    "copyright": "Copyright \u00a9 2026 Katha Studio contributors",
+    "copyright": "Copyright © 2026 Katha Studio contributors",
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -114,7 +116,7 @@
       }
     ],
     "releaseInfo": {
-      "releaseNotes": "Katha Studio \u2014 screenwriting for Indian film & OTT.\n\nDownload the **Katha-Studio-Setup-\u2026.exe** file below and double-click it. If Windows shows \"Windows protected your PC\", click **More info \u2192 Run anyway** (the installer is not code-signed yet).\n\nWeb version: https://adijustadi01.github.io/katha-studio/"
+      "releaseNotes": "Katha Studio — screenwriting for Indian film & OTT.\n\nDownload the **Katha-Studio-Setup-….exe** file below and double-click it. If Windows shows \"Windows protected your PC\", click **More info → Run anyway** (the installer is not code-signed yet).\n\nWeb version: https://adijustadi01.github.io/katha-studio/"
     }
   }
 }

@@ -53,6 +53,18 @@ export function SettingsDialog({ tab: initial }: { tab?: string }) {
           </select>
           <label>Your name (for notes)</label>
           <input value={prefs.author} onChange={(e) => ((prefs.author = (e.target as HTMLInputElement).value), store.savePrefs())} />
+          {platform.kind === 'desktop' && !/Mac/.test(navigator.platform) && (
+            <>
+              <label>Menu bar</label>
+              <div class="col">
+                <select value={prefs.systemMenuBar ? 'system' : 'builtin'} onChange={(e) => ((prefs.systemMenuBar = (e.target as HTMLSelectElement).value === 'system'), store.savePrefs())}>
+                  <option value="builtin">Built-in (recommended)</option>
+                  <option value="system">Windows system menu bar</option>
+                </select>
+                <span class="small muted">The system menu bar selects an item when the mouse button is released over it, so a slightly moving click can run the first item. The built-in bar only runs an item on a deliberate click or Enter.</span>
+              </div>
+            </>
+          )}
           <label>Typewriter scrolling</label>
           <input type="checkbox" checked={prefs.typewriter} onChange={() => ((prefs.typewriter = !prefs.typewriter), store.savePrefs())} />
         </div>

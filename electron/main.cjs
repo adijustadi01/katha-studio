@@ -268,6 +268,15 @@ function updateStates(items) {
 }
 
 function applyMenus(menus) {
+  if (menus === null) {
+    // the window shows its own (built-in) menu bar; remove the system one
+    pendingMenus = null;
+    menuSig = '';
+    Menu.setApplicationMenu(null);
+    if (win) win.setMenuBarVisibility(false);
+    return;
+  }
+  if (win) win.setMenuBarVisibility(true);
   if (openMenus > 0) {
     pendingMenus = menus; // never touch the menu while it is open
     return;
@@ -528,6 +537,8 @@ ipcMain.on('check-updates', () => setupUpdates(true));
 ipcMain.on('get-version', (e) => (e.returnValue = app.getVersion()));
 
 app.whenReady().then(() => {
+  // no Electron default menu: the window shows the built-in menu bar (or the renderer sends the system one)
+  if (process.platform !== 'darwin') Menu.setApplicationMenu(null);
   const last = readJSON(path.join(userData(), 'session.json'), { running: false });
   if (last.running) console.log('Previous session did not exit cleanly — recovery copies will be offered.');
   markSession(true);

@@ -4,7 +4,7 @@ import { App } from './ui/App';
 import { store } from './app/store';
 import { prefs } from './app/prefs';
 import { globalKeydown, runCommand } from './app/commands';
-import { platform, isDesktop } from './platform';
+import { platform, isDesktop, useBuiltInMenuBar } from './platform';
 import { trackProgress } from './app/writing';
 import './features';
 import { nativeMenus } from './ui/MenuBar';
@@ -42,7 +42,8 @@ if (platform.onMenu)
 if (platform.setMenu) {
   let last = '';
   const send = () => {
-    const m = nativeMenus();
+    // built-in menu bar in use: remove the system menu bar (null), otherwise send the native menu
+    const m = useBuiltInMenuBar(prefs.systemMenuBar) ? null : nativeMenus();
     const sig = JSON.stringify(m);
     if (sig === last) return; // only tell the main process when something actually changed
     last = sig;

@@ -19,6 +19,8 @@ export interface Prefs {
   tutorialDone: boolean;
   autosaveSeconds: number;
   spellWords: string[];
+  /** desktop on Windows/Linux: use the operating system's menu bar instead of the built-in one */
+  systemMenuBar: boolean;
   speechRate: number;
 }
 
@@ -40,6 +42,7 @@ const DEFAULTS: Prefs = {
   tutorialDone: false,
   autosaveSeconds: 3,
   spellWords: [],
+  systemMenuBar: false,
   speechRate: 1,
 };
 

@@ -11,7 +11,7 @@ import { RightPanel } from './RightPanel';
 import { Welcome } from './Welcome';
 import { Dialogs } from './dialogs';
 import { MainViews } from './views';
-import { isDesktop } from '../platform';
+import { useBuiltInMenuBar } from '../platform';
 
 export function App() {
   const s = useStore();
@@ -21,7 +21,7 @@ export function App() {
   });
   return (
     <div class={'app' + (prefs.theme === 'dark' ? ' dark' : '')}>
-      {!isDesktop ? <MenuBar /> : <div />}
+      {useBuiltInMenuBar(prefs.systemMenuBar) ? <MenuBar /> : <div />}
       {s.project ? <Toolbar /> : <div />}
       {s.project ? (
         <div class="body">

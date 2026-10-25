@@ -1,10 +1,10 @@
-name: Desktop menu test
+name: Menu tests
 
 on:
   workflow_dispatch:
   push:
     branches: ['claude/**', main]
-    paths: ['electron/**', 'src/ui/MenuBar.tsx', 'src/main.tsx', 'tests/e2e/**', '.github/workflows/menu-test.yml']
+    paths: ['electron/**', 'src/**', 'tests/e2e/**', '.github/workflows/menu-test.yml']
 
 jobs:
   windows:
@@ -28,16 +28,44 @@ jobs:
           cache: npm
       - run: npm ci
       - run: node scripts/build-desktop.mjs
-      - name: Real-input menu test (Windows)
+      - run: npm i --no-save playwright@1
+      - name: Built-in menu bar, real Windows input (default in the desktop app)
+        if: matrix.app == 'current'
+        env:
+          SCALE: ${{ matrix.scale }}
+        run: node tests/e2e/desktop-html-menu.cjs
+      - name: System menu bar, real Windows input
+        # on v1.0.0 this reproduces the bug: a click that drifts onto the first item runs it
         continue-on-error: ${{ matrix.app != 'current' }}
         env:
           SCALE: ${{ matrix.scale }}
           OUT: ${{ runner.temp }}/menu-test
-        run: |
-          npm i --no-save playwright@1
-          node tests/e2e/desktop-menu.cjs
+        run: node tests/e2e/desktop-menu.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: menu-test-${{ matrix.app }}-${{ matrix.scale }}
           path: ${{ runner.temp }}/menu-test
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: sudo apt-get update && sudo apt-get install -y xvfb libxtst6 imagemagick
+      - run: npm i --no-save playwright@1 && npx playwright install --with-deps chromium
+      - name: Web menu test
+        run: |
+          npm run build
+          npx vite preview --port 4173 &
+          npx wait-on -t 60000 http://localhost:4173/katha-studio/ || sleep 5
+          node tests/e2e/web-menu.cjs
+      - name: Desktop menu tests (Xvfb, real X11 input)
+        run: |
+          node scripts/build-desktop.mjs
+          xvfb-run -a -s "-screen 0 1600x1000x24" node tests/e2e/desktop-html-menu.cjs
+          xvfb-run -a -s "-screen 0 1600x1000x24" node tests/e2e/desktop-menu.cjs

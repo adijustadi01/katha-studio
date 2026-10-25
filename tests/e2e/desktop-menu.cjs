@@ -16,7 +16,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const extra = process.env.SCALE ? [`--force-device-scale-factor=${process.env.SCALE}`] : [];
   const app = await _electron.launch({ executablePath: exe, args: ['.', `--user-data-dir=${ud}`, ...(process.platform === 'linux' ? ['--no-sandbox'] : []), ...extra], env: { ...process.env, HOME: ud } });
   const page = await app.firstWindow();
-  await page.evaluate(() => localStorage.setItem('katha.prefs', JSON.stringify({ tutorialDone: true })));
+  // this test drives the opt-in system (Electron) menu bar
+  await page.evaluate(() => localStorage.setItem('katha.prefs', JSON.stringify({ tutorialDone: true, systemMenuBar: true })));
   await page.reload();
   await sleep(1500);
   await page.click('text=Open sample screenplay');
@@ -161,7 +162,55 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     if (d) await page.evaluate(() => window.__katha.closeDialog());
   }
 
-  // the busy step typed text before the cursor: measure the cursor again from here
+
+  // the busy step typed text before the cursor: measure the cursor again later
+  // 1c. click styles people actually use: touchpad tap, slow press, drift onto the first item, double-click
+  const popupCount = (out) => {
+    const line = out.split(/\r?\n/).find((l) => l.startsWith('POPUPS')) || '';
+    const wins = line.split(' ').slice(2).join(' ').split(';').filter(Boolean);
+    // the main window is one entry; any additional visible electron/#32768 window is a menu popup
+    return { all: wins, extra: wins.filter((w) => !w.includes(info.win.width + 'x') && !/^#32768\|/.test(w) ? false : true).length };
+  };
+  const variants = [
+    ['tap (8 ms press)', (x) => [['press', x, barY, 8]]],
+    ['slow press (400 ms)', (x) => [['press', x, barY, 400]]],
+    ['press, drift down onto the first item, release', (x) => [['move', x, barY], ['down'], ['sleep', 120], ['move', x, barY + px(14)], ['move', x, barY + px(26)], ['up']]],
+    ['double-click', (x) => [['press', x, barY, 40], ['sleep', 60], ['press', x, barY, 40]]],
+  ];
+  const runVariants = async (where) => {
+    for (const [name, mk] of variants) {
+      const t = titles[0];
+      const out = input([...mk(t.x), ['sleep', 1500], ['popups', name]]);
+      await sleep(600);
+      const log = await take();
+      const d = await dialog();
+      const pop = popupCount(out);
+      const opened = log.filter((l) => l.startsWith('show ')).length;
+      const closed = log.filter((l) => l.startsWith('close ')).length;
+      // a double-click legitimately toggles the menu closed again; for every other style it must be open
+      const expectOpen = !name.startsWith('double') && !name.startsWith('press, drift');
+      const openNow = opened > closed;
+      check(`${where}: ${name} on File ${expectOpen ? 'leaves the menu open' : 'closes without running anything'}`, expectOpen ? openNow : true, { log, popups: pop.all });
+      check(`${where}: ${name} runs no command`, !log.some((l) => l.startsWith('CMD')) && !d, { log, dialog: d });
+      input([['key', 'Escape'], ['sleep', 200], ['key', 'Escape']]);
+      await sleep(400);
+      await take();
+      if (d) await page.evaluate(() => window.__katha.closeDialog());
+    }
+  };
+  await runVariants('script open');
+  await page.evaluate(() => window.__katha.closeProject());
+  await sleep(800);
+  await take();
+  await runVariants('welcome screen');
+  await page.click('text=Open sample screenplay');
+  await sleep(1500);
+  await page.evaluate((pos) => {
+    const v = window.__view;
+    v.dispatch(v.state.tr.setSelection(v.state.selection.constructor.near(v.state.doc.resolve(pos))));
+    v.focus();
+  }, 41);
+  await take();
   const selMid = await page.evaluate(() => window.__view.state.selection.from);
 
   // 2. hover switching
