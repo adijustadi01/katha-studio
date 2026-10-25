@@ -97,4 +97,4 @@ npm run dist:win     # Windows installer into release/ (on Windows)
 
 Browser checks used during development live in `scripts/e2e-*.cjs` (Playwright).
 
-See [CREDITS.md](CREDITS.md) for fonts and libraries. Licensed under the MIT License.
+See [CREDITS.md](CREDITS.md) for fonts and libraries. Proprietary software — all rights reserved. See [LICENSE](LICENSE).
