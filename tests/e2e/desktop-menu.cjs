@@ -138,7 +138,17 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       await sleep(100);
       l2 = l2.concat(await take());
     }
-    check(`Esc closes ${t.label}`, l2.includes('close ' + t.label), l2);
+    let diag = null;
+    if (!l2.includes('close ' + t.label)) {
+      // diagnostics: what is on screen, and does a second Esc close it?
+      const before = input([['popups', 'after-esc']]);
+      input([['key', 'Escape']]);
+      await sleep(800);
+      const l3 = await take();
+      l2 = l2.concat(l3);
+      diag = { popups: String(before || '').trim(), secondEsc: l3 };
+    }
+    check(`Esc closes ${t.label}`, !diag, { log: l2, diag });
     if (d) await page.evaluate(() => window.__katha.closeDialog());
   }
 
