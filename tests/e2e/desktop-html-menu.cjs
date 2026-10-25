@@ -28,6 +28,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await sleep(1500);
   const geo = await app.evaluate(({ BrowserWindow, screen }) => {
     const w = BrowserWindow.getAllWindows()[0];
+    // keep the whole window on screen (at 150% scaling the default size overflows a small display)
+    const wa = screen.getPrimaryDisplay().workArea;
+    w.unmaximize();
+    w.setBounds({ x: wa.x, y: wa.y, width: Math.min(1024, wa.width), height: Math.min(720, wa.height) });
     w.focus();
     return { content: w.getContentBounds(), sf: screen.getPrimaryDisplay().scaleFactor };
   });

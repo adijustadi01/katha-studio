@@ -35,6 +35,8 @@ public static class KIn {
 "@
 [KIn]::SetProcessDPIAware() | Out-Null
 Add-Type -AssemblyName System.Drawing, System.Windows.Forms
+$SB = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+function MoveTo($x, $y) { [KIn]::SetCursorPos($x, $y) | Out-Null; [KIn]::mouse_event(0x8001, [uint32][math]::Round($x * 65535 / ($SB.Width - 1)), [uint32][math]::Round($y * 65535 / ($SB.Height - 1)), 0, [IntPtr]::Zero) }
 function Shot($p) { $b = [System.Windows.Forms.SystemInformation]::VirtualScreen; $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height; $g = [System.Drawing.Graphics]::FromImage($bmp); $g.CopyFromScreen($b.Left, $b.Top, 0, 0, $bmp.Size); $bmp.Save($p); $g.Dispose(); $bmp.Dispose() }
 `;
 const VK = { Escape: 0x1b, Down: 0x28, Up: 0x26, Left: 0x25, Right: 0x27, Return: 0x0d, F10: 0x79, Alt: 0x12 };
@@ -42,8 +44,9 @@ const VK = { Escape: 0x1b, Down: 0x28, Up: 0x26, Left: 0x25, Right: 0x27, Return
 function win(cmds) {
   let ps = PS_PRELUDE;
   for (const c of cmds) {
-    // SetCursorPos alone moves the pointer without a mouse-move input event; menus track input events
-    if (c[0] === 'move') ps += `[KIn]::SetCursorPos(${c[1]}, ${c[2]}) | Out-Null; [KIn]::mouse_event(1,0,0,0,[IntPtr]::Zero); Start-Sleep -Milliseconds 40\n`;
+    // SetCursorPos alone moves the pointer without a mouse-move input event; menus track input events,
+    // so also send an absolute move to the same point
+    if (c[0] === 'move') ps += `MoveTo ${c[1]} ${c[2]}; Start-Sleep -Milliseconds 40\n`;
     if (c[0] === 'down') ps += `[KIn]::mouse_event(2,0,0,0,[IntPtr]::Zero); Start-Sleep -Milliseconds 30\n`;
     if (c[0] === 'up') ps += `[KIn]::mouse_event(4,0,0,0,[IntPtr]::Zero); Start-Sleep -Milliseconds 30\n`;
     if (c[0] === 'click') ps += `[KIn]::SetCursorPos(${c[1]}, ${c[2]}) | Out-Null; Start-Sleep -Milliseconds 60; [KIn]::mouse_event(2,0,0,0,[IntPtr]::Zero); Start-Sleep -Milliseconds 90; [KIn]::mouse_event(4,0,0,0,[IntPtr]::Zero)\n`;
