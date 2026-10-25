@@ -148,7 +148,20 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       l2 = l2.concat(l3);
       diag = { popups: String(before || '').trim(), secondEsc: l3 };
     }
-    check(`Esc closes ${t.label}`, !diag, { log: l2, diag });
+    // A menu taller than the screen is placed over the menu bar, under the pointer; hovering opens the
+    // submenu under it, and Windows' first Esc closes that submenu, the second the menu (standard behaviour).
+    const covered =
+      diag &&
+      diag.popups
+        .split(/[ ;]/)
+        .map((e) => e.split('|')[2])
+        .filter(Boolean)
+        .some((r) => {
+          const [x, y, wh] = r.split(',');
+          const [w, h] = wh.split('x').map(Number);
+          return t.x >= +x && t.x < +x + w && barY >= +y && barY < +y + h && h > 0 && !(w === px(info.win.width) && +y === px(info.win.y));
+        });
+    check(`Esc closes ${t.label}`, !diag || (covered && diag.secondEsc.includes('close ' + t.label)), { log: l2, diag });
     if (d) await page.evaluate(() => window.__katha.closeDialog());
   }
 
