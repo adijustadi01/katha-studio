@@ -1,6 +1,6 @@
 {
   "name": "katha-studio",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Katha Studio — professional screenwriting for Indian film and OTT (Tamil, Telugu, Hindi, Malayalam, Kannada)",
   "main": "electron/main.cjs",
   "scripts": {
@@ -116,7 +116,7 @@
       }
     ],
     "releaseInfo": {
-      "releaseNotes": "Katha Studio — screenwriting for Indian film & OTT.\n\nDownload the **Katha-Studio-Setup-….exe** file below and double-click it. If Windows shows \"Windows protected your PC\", click **More info → Run anyway** (the installer is not code-signed yet).\n\nWeb version: https://adijustadi01.github.io/katha-studio/"
+      "releaseNotes": "Katha Studio — screenwriting for Indian film & OTT.\n\n**v1.0.1 — menu bar fix.** The top menus (File, Edit, View…) no longer open and instantly close or run New screenplay on Windows. Menus open with one click and stay open; items run only on a deliberate click or Enter; Alt/F10 + arrow keys work; long menus and submenus stay inside small or scaled screens; the window always fits the screen. Installed copies update automatically.\n\nDownload the **Katha-Studio-Setup-….exe** file below and double-click it. If Windows shows \"Windows protected your PC\", click **More info → Run anyway** (the installer is not code-signed yet).\n\nWeb version: https://adijustadi01.github.io/katha-studio/"
     }
   }
 }

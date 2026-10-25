@@ -214,5 +214,5 @@ export const webPlatform: Platform = {
       /* ignore */
     }
   },
-  appVersion: () => (import.meta as any).env?.VITE_APP_VERSION || '1.0.0',
+  appVersion: () => (import.meta as any).env?.VITE_APP_VERSION || '1.0.1',
 };
