@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff8a3d"/>
+      <stop offset="1" stop-color="#d81b60"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#1f1b2e"/>
+  <path d="M150 96h170l70 70v250a20 20 0 0 1-20 20H150a20 20 0 0 1-20-20V116a20 20 0 0 1 20-20z" fill="#fffaf2"/>
+  <path d="M320 96v54a16 16 0 0 0 16 16h54z" fill="#f0dcc0"/>
+  <rect x="170" y="190" width="120" height="14" rx="7" fill="#1f1b2e"/>
+  <rect x="210" y="226" width="80" height="12" rx="6" fill="#9e9e9e"/>
+  <rect x="190" y="254" width="150" height="12" rx="6" fill="#9e9e9e"/>
+  <rect x="190" y="282" width="130" height="12" rx="6" fill="#9e9e9e"/>
+  <circle cx="330" cy="370" r="74" fill="url(#g)"/>
+  <text x="330" y="398" font-family="Noto Sans Tamil, sans-serif" font-size="78" font-weight="700" text-anchor="middle" fill="#fff">க</text>
+</svg>
