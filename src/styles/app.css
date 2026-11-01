@@ -1253,3 +1253,14 @@ kbd {
     max-height: calc(100vh - 16px);
   }
 }
+
+/* Welcome screen: the interface-language picker inherited white text on a white box */
+.welcome select {
+  background: #2a2540;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+.welcome select option {
+  background: #2a2540;
+  color: #fff;
+}
